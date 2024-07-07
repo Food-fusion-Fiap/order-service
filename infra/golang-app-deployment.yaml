@@ -25,14 +25,14 @@ spec:
           - containerPort: 8080
         livenessProbe:
             httpGet:
-              path: /customers
+              path: /products/categories
               port: 8080
             periodSeconds: 60
             failureThreshold: 3
             initialDelaySeconds: 10
         readinessProbe:
             httpGet:
-              path: /customers
+              path: /products/categories
               port: 8080
             periodSeconds: 20
             failureThreshold: 5
@@ -63,3 +63,23 @@ spec:
               secretKeyRef:
                 name: secret-group-18-fastfood-backend
                 key: POSTGRES_PASSWORD
+          - name: MONGO_INITDB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: configmap-group-18-fastfood-backend
+                key: MONGO_INITDB_HOST
+          - name: MONGO_INITDB_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: configmap-group-18-fastfood-backend
+                key: MONGO_INITDB_DATABASE
+          - name: MONGO_INITDB_ROOT_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: secret-group-18-fastfood-backend
+                key: MONGO_INITDB_ROOT_USERNAME
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secret-group-18-fastfood-backend
+                key: MONGO_INITDB_ROOT_PASSWORD
