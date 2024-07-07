@@ -9,11 +9,16 @@ spec:
   resources:
     requests:
       storage: 1Gi
+  selector:
+    matchLabels:
+      pv: local-storage-postgres
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: local-storage
+  labels:
+    pv: local-storage-postgres
 spec:
   storageClassName: manual
   capacity:
