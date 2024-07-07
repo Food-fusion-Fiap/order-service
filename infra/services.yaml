@@ -24,6 +24,17 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
+  name: mongodb-food-fusion-service
+spec:
+  selector:
+    app: mongodb-food-fusion-deployment
+  ports:
+    - port: 27017
+  type: ClusterIP
+---
+kind: Service
+apiVersion: v1
+metadata:
   name: pgadmin
 spec:
   selector:
