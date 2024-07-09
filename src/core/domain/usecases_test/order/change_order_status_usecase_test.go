@@ -2,24 +2,20 @@ package order
 
 import (
 	"errors"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
-	"testing"
-	"time"
-
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/enums"
+	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
 	"github.com/Food-fusion-Fiap/order-service/src/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"testing"
+	"time"
 )
 
 func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
-	mockRepo := new(MockOrderRepository)
-	usecase := usecases.ChangeOrderStatusUsecase{OrderRepository: mockRepo}
-
 	// Define common test variables
-	orderId := "123"
-	now := time.Now().Format(utils.CompleteEnglishDateFormat)
+	orderId := primitive.NewObjectID().Hex()
 
 	tests := []struct {
 		name           string
@@ -40,7 +36,7 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 				ID:            orderId,
 				Status:        enums.Received,
 				PaymentStatus: enums.Paid,
-				UpdatedAt:     now,
+				UpdatedAt:     time.Now().Format(utils.CompleteEnglishDateFormat),
 			},
 			expectedError: nil,
 		},
@@ -56,7 +52,7 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 				ID:            orderId,
 				Status:        enums.Cancelled,
 				PaymentStatus: enums.Cancelled,
-				UpdatedAt:     now,
+				UpdatedAt:     time.Now().Format(utils.CompleteEnglishDateFormat),
 			},
 			expectedError: nil,
 		},
@@ -87,7 +83,7 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 				ID:            orderId,
 				Status:        enums.Preparation,
 				PaymentStatus: enums.Paid,
-				UpdatedAt:     now,
+				UpdatedAt:     time.Now().Format(utils.CompleteEnglishDateFormat),
 			},
 			expectedError: nil,
 		},
@@ -118,7 +114,7 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 				ID:            orderId,
 				Status:        enums.Ready,
 				PaymentStatus: enums.Paid,
-				UpdatedAt:     now,
+				UpdatedAt:     time.Now().Format(utils.CompleteEnglishDateFormat),
 			},
 			expectedError: nil,
 		},
@@ -149,7 +145,7 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 				ID:            orderId,
 				Status:        enums.Finished,
 				PaymentStatus: enums.Paid,
-				UpdatedAt:     now,
+				UpdatedAt:     time.Now().Format(utils.CompleteEnglishDateFormat),
 			},
 			expectedError: nil,
 		},
@@ -187,6 +183,9 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(MockOrderRepository)
+			usecase := usecases.ChangeOrderStatusUsecase{OrderRepository: mockRepo}
+
 			mockRepo.On("FindById", orderId).Return(tt.initialOrder, nil)
 			if tt.expectedError == nil {
 				mockRepo.On("Update", mock.AnythingOfType("*entities.Order")).Return(tt.expectedOrder, nil)
@@ -199,7 +198,7 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectedOrder, order)
-				assert.Equal(t, now, order.UpdatedAt)
+				assert.Equal(t, tt.expectedOrder.UpdatedAt, order.UpdatedAt)
 			}
 
 			mockRepo.AssertExpectations(t)
