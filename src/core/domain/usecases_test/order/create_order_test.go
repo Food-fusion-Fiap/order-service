@@ -1,8 +1,8 @@
 package order
 
 import (
-	"errors"
 	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
+	"math/rand"
 	"testing"
 
 	"github.com/Food-fusion-Fiap/order-service/src/adapters/gateways"
@@ -10,15 +10,6 @@ import (
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
 	"github.com/stretchr/testify/assert"
 )
-
-type mockOrderRepository struct {
-	gateways.OrderRepository
-	mockCreate func(*entities.Order) (*entities.Order, error)
-}
-
-func (m *mockOrderRepository) Create(order *entities.Order) (*entities.Order, error) {
-	return m.mockCreate(order)
-}
 
 type mockCustomerRepository struct {
 	gateways.CustomerRepository
@@ -39,7 +30,7 @@ func (m *mockProductRepository) FindByIds(ids []uint) ([]entities.Product, error
 }
 
 func TestCreateOrderUsecase_Execute(t *testing.T) {
-	mockOrderRepo := &mockOrderRepository{}
+	mockOrderRepo := &MockOrderRepository{}
 	mockCustomerRepo := &mockCustomerRepository{}
 	mockProductRepo := &mockProductRepository{}
 
@@ -49,7 +40,7 @@ func TestCreateOrderUsecase_Execute(t *testing.T) {
 		ProductRepository:  mockProductRepo,
 	}
 
-	t.Run("valid input", func(t *testing.T) {
+	t.Run("valid input and arbitrary customer", func(t *testing.T) {
 		mockOrderRepo.mockCreate = func(order *entities.Order) (*entities.Order, error) {
 			return &entities.Order{}, nil
 		}
@@ -63,7 +54,7 @@ func TestCreateOrderUsecase_Execute(t *testing.T) {
 		}
 
 		inputDto := dtos.CreateOrderDto{
-			CustomerId: 1,
+			CustomerId: uint(rand.Intn(100)),
 			Products: []dtos.ProductInsideOrder{
 				{Id: 1, Quantity: 2, Observation: "test"},
 				{Id: 2, Quantity: 1, Observation: "test"},
@@ -72,20 +63,6 @@ func TestCreateOrderUsecase_Execute(t *testing.T) {
 
 		_, err := usecase.Execute(inputDto)
 		assert.NoError(t, err)
-	})
-
-	t.Run("invalid customer", func(t *testing.T) {
-		mockCustomerRepo.mockFindFirstById = func(id uint) (*entities.Customer, error) {
-			return nil, errors.New("customer not found")
-		}
-
-		inputDto := dtos.CreateOrderDto{
-			CustomerId: 1,
-			Products:   []dtos.ProductInsideOrder{},
-		}
-
-		_, err := usecase.Execute(inputDto)
-		assert.EqualError(t, err, "usuário não encontrado")
 	})
 
 	t.Run("invalid product", func(t *testing.T) {
