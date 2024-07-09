@@ -6,10 +6,9 @@ import (
 
 type OrderRepository interface {
 	List(sortBy string, orderBy string, status string) ([]entities.Order, error)
-	FindById(orderId uint) *entities.Order
-	Update(*entities.Order)
+	FindById(orderId string) (*entities.Order, error)
+	Update(*entities.Order) (*entities.Order, error)
 	Create(order *entities.Order) (*entities.Order, error)
-	ExistsOrderProduct(productId uint) bool
 	GetDescOrder() string
 	GetAscOrder() string
 	GetCreatedAtFieldName() string
