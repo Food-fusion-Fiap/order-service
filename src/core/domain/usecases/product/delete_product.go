@@ -1,7 +1,6 @@
 package usecases
 
 import (
-	"errors"
 	gateways2 "github.com/Food-fusion-Fiap/order-service/src/adapters/gateways"
 )
 
@@ -15,9 +14,5 @@ func BuildDeleteProductUsecase(repository gateways2.ProductRepository, orderRepo
 }
 
 func (p *DeleteProductUsecase) Execute(id uint) error {
-	if p.orderRepository.ExistsOrderProduct(id) {
-		return errors.New("product is associated with an order")
-	}
-
 	return p.repository.DeleteById(id)
 }
