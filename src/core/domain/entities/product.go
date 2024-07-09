@@ -1,5 +1,7 @@
 package entities
 
+import "errors"
+
 type Product struct {
 	ID          uint    `json:"id"`
 	Name        string  `json:"name"`
@@ -18,4 +20,13 @@ func (p *Product) PatchFields(name string, price float64, description string, ca
 	p.Price = price
 	p.Description = description
 	p.CategoryId = categoryId
+}
+
+func GetByID(products []Product, id uint) (*Product, error) {
+	for _, product := range products {
+		if product.ID == id {
+			return &product, nil
+		}
+	}
+	return nil, errors.New("item not found")
 }
