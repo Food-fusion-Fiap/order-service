@@ -9,19 +9,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"os"
+	"time"
 )
 
 var (
-	DB                          *mongo.Client
-	productCategoriesCollection *mongo.Collection
-	productsCollection          *mongo.Collection
-	ordersCollection            *mongo.Collection
-	orderProductsCollection     *mongo.Collection
+	ProductCategoriesCollection *mongo.Collection
+	OrdersCollection            *mongo.Collection
+	LocaleApp                   *time.Location
 )
 
 func ConnectDB() {
+	locale, err := time.LoadLocation("America/Sao_Paulo")
+	LocaleApp = locale
 
-	// MongoDB connection string
 	uri := fmt.Sprintf("mongodb://%s:%s@%s:27017",
 		os.Getenv("MONGO_INITDB_ROOT_USERNAME"), os.Getenv("MONGO_INITDB_ROOT_PASSWORD"), os.Getenv("MONGO_INITDB_HOST"))
 
@@ -43,14 +43,10 @@ func ConnectDB() {
 
 	fmt.Println("Conectado ao MongoDB!")
 
-	// Select the database and collection
 	db := client.Database(os.Getenv("MONGO_INITDB_DATABASE"))
-	productCategoriesCollection = db.Collection("product_categories")
-	productsCollection = db.Collection("products")
-	ordersCollection = db.Collection("orders")
-	orderProductsCollection = db.Collection("order_products")
+	ProductCategoriesCollection = db.Collection("product_categories")
+	OrdersCollection = db.Collection("orders")
 
-	// Insert default product categories if they don't exist
 	productCategories := []models.ProductCategory{
 		{Description: "Lanche"},
 		{Description: "Acompanhamento"},
@@ -60,13 +56,13 @@ func ConnectDB() {
 
 	for _, category := range productCategories {
 		filter := bson.D{{Key: "description", Value: category.Description}}
-		count, err := productCategoriesCollection.CountDocuments(context.TODO(), filter)
+		count, err := ProductCategoriesCollection.CountDocuments(context.TODO(), filter)
 		if err != nil {
 			log.Println("Erro ao verificar existência de categoria:", err)
 			continue
 		}
 		if count == 0 {
-			_, err := productCategoriesCollection.InsertOne(context.TODO(), category)
+			_, err := ProductCategoriesCollection.InsertOne(context.TODO(), category)
 			if err != nil {
 				log.Println("Erro ao inserir categoria:", err)
 			}
