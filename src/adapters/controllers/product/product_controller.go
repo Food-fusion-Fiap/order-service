@@ -53,18 +53,18 @@ func Create(c *gin.Context) {
 	usecase := usecases.BuildCreateProductUsecase(productRepository, productCategoryRepository)
 	result, err := usecase.Execute(inputDto)
 
-	if err != nil {
-		log.Println("there was an error to save the product", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+	if result != nil && !result.IsExistingProduct() {
+		log.Println("there was an error to save the product", *result)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"mensagem": "Os dados informados são inválidos. Validar contrato da API.",
 		})
 		return
 	}
 
-	if !result.IsExistingProduct() {
-		log.Println("there was an error to save the product", *result)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"mensagem": "Os dados informados são inválidos. Validar contrato da API.",
+	if err != nil {
+		log.Println("there was an error to save the product", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
