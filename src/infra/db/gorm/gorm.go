@@ -37,10 +37,5 @@ func ConnectDB() {
 		DB.Create(&productCategories)
 	}
 
-	DB.AutoMigrate(&models.Product{}, &models.Order{}, &models.OrderProduct{})
-
-	if !DB.Migrator().HasColumn(&models.OrderProduct{}, "Quantity") {
-		DB.Migrator().AddColumn(&models.OrderProduct{}, "Quantity")
-		DB.Migrator().AddColumn(&models.OrderProduct{}, "Observation")
-	}
+	DB.AutoMigrate(&models.Product{})
 }
