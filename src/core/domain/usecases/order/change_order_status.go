@@ -23,15 +23,15 @@ func (r *ChangeOrderStatusUsecase) Execute(orderId string, changeToStatus string
 
 	switch changeToStatus {
 	case enums.Cancelled:
-		order, err = ChangeToCancelled(order)
+		order, err = changeToCancelled(order)
 	case enums.Received:
-		order, err = ChangeToReceived(order)
+		order, err = changeToReceived(order)
 	case enums.Preparation:
-		order, err = ChangeToPreparation(order)
+		order, err = changeToPreparation(order)
 	case enums.Ready:
-		order, err = ChangeToReady(order)
+		order, err = changeToReady(order)
 	case enums.Finished:
-		order, err = ChangeToFinished(order)
+		order, err = changeToFinished(order)
 	default:
 		return order, errors.New("status desconhecido")
 	}
@@ -46,18 +46,18 @@ func (r *ChangeOrderStatusUsecase) Execute(orderId string, changeToStatus string
 	return order, err
 }
 
-func ChangeToCancelled(order *entities.Order) (*entities.Order, error) {
+func changeToCancelled(order *entities.Order) (*entities.Order, error) {
 	if order.Status != enums.Created || order.PaymentStatus != enums.AwaitingPayment {
 		return order, errors.New("não é possível cancelar o pedido")
 	}
 
-	order.Status = enums.Received
-	order.PaymentStatus = enums.Paid
+	order.Status = enums.Cancelled
+	order.PaymentStatus = enums.Cancelled
 
 	return order, nil
 }
 
-func ChangeToReceived(order *entities.Order) (*entities.Order, error) {
+func changeToReceived(order *entities.Order) (*entities.Order, error) {
 	if order.Status != enums.Created || order.PaymentStatus != enums.AwaitingPayment {
 		return order, errors.New("não é possível mudar o pedido para Recebido")
 	}
@@ -68,7 +68,7 @@ func ChangeToReceived(order *entities.Order) (*entities.Order, error) {
 	return order, nil
 }
 
-func ChangeToPreparation(order *entities.Order) (*entities.Order, error) {
+func changeToPreparation(order *entities.Order) (*entities.Order, error) {
 	if order.Status != enums.Received || order.PaymentStatus != enums.Paid {
 		return order, errors.New("não é possível mudar o pedido para Em preparação")
 	}
@@ -78,7 +78,7 @@ func ChangeToPreparation(order *entities.Order) (*entities.Order, error) {
 	return order, nil
 }
 
-func ChangeToReady(order *entities.Order) (*entities.Order, error) {
+func changeToReady(order *entities.Order) (*entities.Order, error) {
 	if order.Status != enums.Preparation || order.PaymentStatus != enums.Paid {
 		return order, errors.New("não é possível mudar o pedido para Pronto")
 	}
@@ -88,7 +88,7 @@ func ChangeToReady(order *entities.Order) (*entities.Order, error) {
 	return order, nil
 }
 
-func ChangeToFinished(order *entities.Order) (*entities.Order, error) {
+func changeToFinished(order *entities.Order) (*entities.Order, error) {
 	if order.Status != enums.Ready || order.PaymentStatus != enums.Paid {
 		return order, errors.New("não é possível mudar o pedido para Finalizado")
 	}
