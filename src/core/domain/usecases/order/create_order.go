@@ -22,16 +22,17 @@ func (r *CreateOrderUsecase) Execute(inputDto dtos.CreateOrderDto) (*entities.Or
 		return nil, err
 	}
 
+	productsFromDb, _ := r.ProductRepository.FindByIds(inputDto.GetProductIds())
 	for _, p := range inputDto.Products {
-		var productEntity = entities.Product{ID: p.Id}
-		var productInsideOrder = entities.ProductInsideOrder{Quantity: p.Quantity, Observation: p.Observation, Product: productEntity}
+		product, _ := entities.GetByID(productsFromDb, p.Id)
+		var productInsideOrder = entities.ProductInsideOrder{Quantity: p.Quantity, Observation: p.Observation, Product: *product}
 		products = append(products, productInsideOrder)
 	}
 
 	var entity = entities.Order{
 		Status:        enums.Created,
 		PaymentStatus: enums.AwaitingPayment,
-		CustomerID:    inputDto.CustomerId,
+		CustomerID:    int64(inputDto.CustomerId),
 		Products:      products,
 	}
 
@@ -77,11 +78,6 @@ func RemoveDuplicates(ids []uint) []uint { // TODO: move to utils
 }
 
 func (r *CreateOrderUsecase) Verifications(inputDto dtos.CreateOrderDto) error {
-	var errCustomer = r.CustomerExists(inputDto.CustomerId)
-	if errCustomer != nil {
-		return errCustomer
-	}
-
 	var errProducts = r.AllProductsExists(inputDto.GetProductIds())
 	if errProducts != nil {
 		return errProducts
