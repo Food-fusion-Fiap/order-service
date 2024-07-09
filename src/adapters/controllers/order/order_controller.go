@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/dtos"
 	order "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
 	"github.com/Food-fusion-Fiap/order-service/src/infra/db/repositories"
@@ -99,6 +100,7 @@ func ListOngoingOrders(c *gin.Context) {
 	orders, err := usecase.Execute()
 
 	if err != nil {
+		fmt.Println("there was an error to process the usecase", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
