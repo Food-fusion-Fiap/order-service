@@ -13,11 +13,11 @@ type ChangeOrderStatusUsecase struct {
 	OrderRepository gateways.OrderRepository
 }
 
-func (r *ChangeOrderStatusUsecase) Execute(orderId uint, changeToStatus string) (*entities.Order, error) {
+func (r *ChangeOrderStatusUsecase) Execute(orderId string, changeToStatus string) (*entities.Order, error) {
 	var err error
-	order := r.OrderRepository.FindById(orderId)
+	order, _ := r.OrderRepository.FindById(orderId)
 
-	if order.ID == 0 {
+	if order.ID == "" {
 		return nil, errors.New("pedido não existe")
 	}
 
@@ -36,8 +36,12 @@ func (r *ChangeOrderStatusUsecase) Execute(orderId uint, changeToStatus string) 
 		return order, errors.New("status desconhecido")
 	}
 
+	if err != nil {
+		return order, err
+	}
+
 	order.UpdatedAt = time.Now().Format(utils.CompleteEnglishDateFormat)
-	r.OrderRepository.Update(order)
+	order, err = r.OrderRepository.Update(order)
 
 	return order, err
 }
