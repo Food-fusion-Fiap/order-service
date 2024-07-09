@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/adapters/gateways"
 	productDtos "github.com/Food-fusion-Fiap/order-service/src/core/domain/dtos/product"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
@@ -28,12 +29,12 @@ func (p *CreateProductUsecase) Execute(inputDto productDtos.PersistProductDto) (
 	category, err := p.productCategoryRepository.FindById(product.CategoryId)
 
 	if err != nil {
-		return nil, nil
+		return nil, errors.New("ProductCategory repository error")
 	}
 
 	if !category.IsExistingProductCategory() {
 		log.Println("Product category doesn't exist! - productCategoryId=", product.CategoryId)
-		return product, nil
+		return product, errors.New("product category doesn't exist")
 	}
 
 	return p.repository.Create(product)
