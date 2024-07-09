@@ -1,10 +1,17 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
-	"github.com/Food-fusion-Fiap/order-service/src/infra/db/gorm"
 	models "github.com/Food-fusion-Fiap/order-service/src/infra/db/models"
+	"github.com/Food-fusion-Fiap/order-service/src/infra/db/mongo_driver"
+	models2 "github.com/Food-fusion-Fiap/order-service/src/infra/db/mongo_driver/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 type OrderRepository struct {
@@ -25,90 +32,132 @@ func SetDefaultValues(sortBy string, orderBy string, status string) (string, str
 }
 
 func (r OrderRepository) List(sortBy string, orderBy string, status string) ([]entities.Order, error) {
-	var orderModel []models.Order
+	var orderModels []models.Order
 
 	sortBy, orderBy, status = SetDefaultValues(sortBy, orderBy, status)
 
-	if len(status) == 0 {
-		gorm.DB.Preload("Products").Preload("Customer").Order(sortBy + " " + orderBy).Find(&orderModel)
-	} else {
-		gorm.DB.Preload("Products").Preload("Customer").Order(sortBy+" "+orderBy).Where("status = ?", status).Find(&orderModel)
+	filter := bson.D{}
+	if len(status) > 0 {
+		filter = bson.D{{"status", status}}
 	}
 
-	var order []entities.Order
+	sortOrder := 1
+	if orderBy == GetDescOrder() {
+		sortOrder = -1
+	}
+	opts := options.Find().SetSort(bson.D{{Key: sortBy, Value: sortOrder}})
 
-	for _, orderModel := range orderModel {
-		order = append(order, OrderModelToOrderEntity(&orderModel))
+	cursor, err := mongo_driver.OrdersCollection.Find(context.TODO(), filter, opts)
+
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	if err := cursor.All(context.TODO(), &orderModels); err != nil {
+		return nil, err
 	}
 
-	return order, nil
+	var orders []entities.Order
+	for _, orderModel := range orderModels {
+		orders = append(orders, *orderModel.ToDomain(orderModelProductsToProductInsideOrder(orderModel)))
+	}
+	return orders, nil
 }
 
-func (r OrderRepository) FindById(orderId uint) *entities.Order {
+func (r OrderRepository) FindById(orderId string) (*entities.Order, error) {
 	var orderModel models.Order
-	gorm.DB.First(&orderModel, orderId)
 
-	result := OrderModelToOrderEntity(&orderModel)
+	objID, convErr := primitive.ObjectIDFromHex(orderId)
 
-	return &result
+	if convErr != nil {
+		return nil, errors.New("invalid orderId to convert to primitive.ObjectID")
+	}
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+
+	err := mongo_driver.OrdersCollection.FindOne(context.TODO(), filter).Decode(&orderModel)
+
+	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
+		return &entities.Order{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	productsOrderModel := orderModelProductsToProductInsideOrder(orderModel)
+	return orderModel.ToDomain(productsOrderModel), nil
 }
 
-func (r OrderRepository) Update(order *entities.Order) {
-	var orderModel models.Order
-	gorm.DB.First(&orderModel, order.ID)
-	gorm.DB.Model(&orderModel).Updates(models.Order{Status: order.Status, PaymentStatus: order.PaymentStatus})
+func orderModelProductsToProductInsideOrder(orderModel models.Order) []entities.ProductInsideOrder {
+	var productsOrderModel []entities.ProductInsideOrder
+	for _, p := range orderModel.Products {
+		productsOrderModel = append(productsOrderModel, entities.ProductInsideOrder{
+			Product:     p.Product.ToDomain(),
+			Quantity:    p.Quantity,
+			Observation: p.Observation,
+		})
+	}
+	return productsOrderModel
+}
+
+func (r OrderRepository) Update(order *entities.Order) (*entities.Order, error) {
+
+	objID, convErr := primitive.ObjectIDFromHex(order.ID)
+
+	if convErr != nil {
+		return nil, errors.New("invalid orderId to convert to primitive.ObjectID")
+	}
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "status", Value: order.Status},
+			{Key: "payment_status", Value: order.PaymentStatus},
+			{Key: "updated_at", Value: primitive.NewDateTimeFromTime(time.Now().In(mongo_driver.LocaleApp))},
+		}},
+	}
+
+	_, err := mongo_driver.OrdersCollection.UpdateOne(context.TODO(), filter, update)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r.FindById(order.ID)
 }
 
 func (r OrderRepository) Create(order *entities.Order) (*entities.Order, error) {
 	var model models.Order
 
-	gorm.DB.Find(&model.Products, order.GetProductIds())
+	model.Status = order.Status
+	model.PaymentStatus = order.PaymentStatus
 
 	var productsOrderModel []models.OrderProduct
 	for _, p := range order.Products {
 		productsOrderModel = append(productsOrderModel, models.OrderProduct{
-			ProductID:   p.Product.ID,
+			Product: models2.Product{
+				ID:          int64(p.Product.ID),
+				Name:        p.Product.Name,
+				Price:       p.Product.Price,
+				Description: p.Product.Description,
+				CategoryID:  int64(p.Product.CategoryId),
+			},
 			Quantity:    p.Quantity,
 			Observation: p.Observation,
 		})
 	}
 
 	model.Products = productsOrderModel
-	model.Status = order.Status
-	model.PaymentStatus = order.PaymentStatus // TODO: não ter copy de entity pra model deixa prone a erros
+	model.CreatedAt = primitive.NewDateTimeFromTime(time.Now().In(mongo_driver.LocaleApp))
+	model.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().In(mongo_driver.LocaleApp))
 
-	if err := gorm.DB.Create(&model).Error; err != nil {
-		return &entities.Order{}, errors.New("ocorreu um erro desconhecido ao criar o pedido")
+	result, err := mongo_driver.OrdersCollection.InsertOne(context.TODO(), model)
+	if err != nil {
+		return nil, errors.New("ocorreu um erro desconhecido ao criar o pedido")
 	}
 
-	result := OrderModelToOrderEntity(&model)
-	return &result, nil
-}
-
-func OrderModelToOrderEntity(order *models.Order) entities.Order {
-	gorm.DB.Preload("Products").Preload("Customer").Where("id = ?", order.ID).Find(&order)
-
-	var orderProducts []models.OrderProduct
-	gorm.DB.Preload("Product").Where("order_id = ?", order.ID).Find(&orderProducts)
-
-	var products []entities.ProductInsideOrder
-	for _, p := range orderProducts {
-		products = append(products, entities.ProductInsideOrder{
-			Product:     p.Product.ToDomain(),
-			Quantity:    p.Quantity,
-			Observation: p.Observation,
-		})
-	}
-
-	return order.ToDomain(products)
-}
-
-func (r OrderRepository) ExistsOrderProduct(productId uint) bool {
-	var orderModel models.OrderProduct
-
-	gorm.DB.First(&orderModel, productId)
-
-	return orderModel.OrderID > 0
+	model.ID = result.InsertedID.(primitive.ObjectID)
+	return model.ToDomain(order.Products), nil
 }
 
 func GetDescOrder() string {
