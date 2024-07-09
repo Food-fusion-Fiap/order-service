@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/validator.v2"
 	"net/http"
-	"strconv"
 )
 
 func CreateOrder(c *gin.Context) {
@@ -52,7 +51,7 @@ func CreateOrder(c *gin.Context) {
 
 func ChangeOrderStatus(c *gin.Context) {
 	var inputDto dtos.ChangeOrderStatusDto
-	id, _ := strconv.Atoi(c.Params.ByName("id"))
+	id := c.Params.ByName("id")
 
 	if err := c.ShouldBindJSON(&inputDto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -74,7 +73,7 @@ func ChangeOrderStatus(c *gin.Context) {
 		OrderRepository: orderRepository,
 	}
 
-	orderResult, err := usecase.Execute(uint(id), inputDto.ChangeToStatus)
+	orderResult, err := usecase.Execute(id, inputDto.ChangeToStatus)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
