@@ -8,6 +8,11 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name to create'
+        required: true
 
 permissions:
   contents: write
@@ -67,11 +72,11 @@ jobs:
   build-and-deploy:
     name: Continuous Delivery Pipeline
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#
+      - name: Checkout code
+        uses: actions/checkout@v2
+
 #      - name: Set up Docker Buildx
 #        uses: docker/setup-buildx-action@v1
 #
@@ -140,13 +145,20 @@ jobs:
 #          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
 #          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
 
+      # Replace with your logic to determine the next tag name
+      - name: Determine next tag
+        id: tagger
+        run: echo "::set-output name=next_tag::v1.0.0"  # Example logic to set the tag name
+
       - name: Push new tag to GitHub
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/github-script@v5
         with:
           script: |
+            const tag = "${{ github.event.inputs.tag_name || steps.tagger.outputs.next_tag }}";
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/${{ steps.tagger.outputs.next_tag }}',
+              ref: `refs/tags/${tag}`,
               sha: context.sha
             })
