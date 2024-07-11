@@ -1,11 +1,10 @@
-package product
+package usecases
 
 import (
 	"errors"
 	dtosProd "github.com/Food-fusion-Fiap/order-service/src/core/domain/dtos/product"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/product"
-	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -14,7 +13,7 @@ import (
 func TestExecute_ExistingProduct(t *testing.T) {
 
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildEditProductUsecase(repo)
+	usecase := BuildEditProductUsecase(repo)
 
 	inputDto := dtosProd.PersistProductDto{
 		ID:          123,
@@ -45,7 +44,7 @@ func TestExecute_ExistingProduct(t *testing.T) {
 
 func TestExecute_NonExistingProduct(t *testing.T) {
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildEditProductUsecase(repo)
+	usecase := BuildEditProductUsecase(repo)
 
 	inputDto := dtosProd.PersistProductDto{
 		ID:          321,

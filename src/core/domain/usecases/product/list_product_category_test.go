@@ -1,10 +1,9 @@
-package product
+package usecases
 
 import (
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/product"
-	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -12,7 +11,7 @@ import (
 func TestListProductCategoryUsecase_Execute_Success(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductCategoryRepository)
-	usecase := usecases.BuildListProductCategoryUsecase(repo)
+	usecase := BuildListProductCategoryUsecase(repo)
 
 	expectedCategories := []entities.ProductCategory{
 		{ID: 1, Description: "Category 1"},
@@ -34,7 +33,7 @@ func TestListProductCategoryUsecase_Execute_Success(t *testing.T) {
 func TestListProductCategoryUsecase_Execute_Error(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductCategoryRepository)
-	usecase := usecases.BuildListProductCategoryUsecase(repo)
+	usecase := BuildListProductCategoryUsecase(repo)
 
 	repo.On("FindAll").Return([]entities.ProductCategory{}, errors.New("error finding product categories"))
 

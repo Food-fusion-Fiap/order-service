@@ -1,11 +1,10 @@
-package order
+package usecases
 
 import (
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/enums"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
-	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -49,7 +48,7 @@ func TestListOngoingOrdersUsecase_Execute(t *testing.T) {
 
 	for _, tt := range tests {
 		mockOrderRepo := new(utils.MockOrderRepository)
-		usecase := new(usecases.ListOngoingOrdersUsecase)
+		usecase := new(ListOngoingOrdersUsecase)
 		usecase.OrderRepository = mockOrderRepo
 
 		t.Run(tt.name, func(t *testing.T) {

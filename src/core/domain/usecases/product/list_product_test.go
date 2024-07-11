@@ -1,10 +1,9 @@
-package product
+package usecases
 
 import (
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/product"
-	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -12,7 +11,7 @@ import (
 func TestListProductUsecase_Execute_NoCategoryId(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildListProductUsecase(repo)
+	usecase := BuildListProductUsecase(repo)
 
 	expectedProducts := []entities.Product{
 		{ID: 1, Name: "Product 1", Price: 100.0, Description: "Description 1", CategoryId: 456},
@@ -34,7 +33,7 @@ func TestListProductUsecase_Execute_NoCategoryId(t *testing.T) {
 func TestListProductUsecase_Execute_WithCategoryId(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildListProductUsecase(repo)
+	usecase := BuildListProductUsecase(repo)
 
 	expectedProducts := []entities.Product{
 		{ID: 1, Name: "Product 1", Price: 100.0, Description: "Description 1", CategoryId: 1},
@@ -55,7 +54,7 @@ func TestListProductUsecase_Execute_WithCategoryId(t *testing.T) {
 func TestListProductUsecase_Execute_FindAllError(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildListProductUsecase(repo)
+	usecase := BuildListProductUsecase(repo)
 
 	repo.On("FindAll").Return([]entities.Product{}, errors.New("error finding all products"))
 
@@ -73,7 +72,7 @@ func TestListProductUsecase_Execute_FindAllError(t *testing.T) {
 func TestListProductUsecase_Execute_FindByCategoryIdError(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildListProductUsecase(repo)
+	usecase := BuildListProductUsecase(repo)
 
 	repo.On("FindByCategoryId", uint(1)).Return([]entities.Product{}, errors.New("error finding products by category ID"))
 

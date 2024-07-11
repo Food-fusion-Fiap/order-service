@@ -1,9 +1,8 @@
-package product
+package usecases
 
 import (
 	"errors"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/product"
-	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -11,7 +10,7 @@ import (
 func TestDeleteProductUsecase_Execute_Success(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildDeleteProductUsecase(repo)
+	usecase := BuildDeleteProductUsecase(repo)
 
 	repo.On("DeleteById", uint(1)).Return(nil)
 
@@ -27,7 +26,7 @@ func TestDeleteProductUsecase_Execute_Success(t *testing.T) {
 func TestDeleteProductUsecase_Execute_Error(t *testing.T) {
 	// Arrange
 	repo := new(utils.MockProductRepository)
-	usecase := usecases.BuildDeleteProductUsecase(repo)
+	usecase := BuildDeleteProductUsecase(repo)
 
 	repo.On("DeleteById", uint(1)).Return(errors.New("error deleting product"))
 

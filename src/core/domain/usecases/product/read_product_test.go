@@ -1,17 +1,16 @@
-package product
+package usecases
 
 import (
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
-	usecasesProduct "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/product"
-	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestReadProductUsecase_Execute_ProductFound(t *testing.T) {
 	repo := new(utils.MockProductRepository)
-	usecase := usecasesProduct.BuildReadProductUsecase(repo)
+	usecase := BuildReadProductUsecase(repo)
 
 	expectedProduct := &entities.Product{
 		ID:          1,
@@ -34,7 +33,7 @@ func TestReadProductUsecase_Execute_ProductFound(t *testing.T) {
 
 func TestReadProductUsecase_Execute_ProductNotFound(t *testing.T) {
 	repo := new(utils.MockProductRepository)
-	usecase := usecasesProduct.BuildReadProductUsecase(repo)
+	usecase := BuildReadProductUsecase(repo)
 
 	var id uint = 1
 

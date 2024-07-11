@@ -1,11 +1,10 @@
-package order
+package usecases
 
 import (
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/enums"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
-	utils2 "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	utils2 "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/Food-fusion-Fiap/order-service/src/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -185,7 +184,7 @@ func TestChangeOrderStatusUsecase_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(utils2.MockOrderRepository)
-			usecase := usecases.ChangeOrderStatusUsecase{OrderRepository: mockRepo}
+			usecase := ChangeOrderStatusUsecase{OrderRepository: mockRepo}
 
 			mockRepo.On("FindById", orderId).Return(tt.initialOrder, nil)
 			if tt.expectedError == nil {

@@ -1,10 +1,9 @@
-package order
+package usecases
 
 import (
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/enums"
-	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
-	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
+	utils2 "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/utils"
 	"github.com/stretchr/testify/mock"
 	"testing"
 
@@ -15,9 +14,9 @@ import (
 
 func TestCreateOrderUsecase_Execute_Success(t *testing.T) {
 	// Arrange
-	orderRepo := new(utils.MockOrderRepository)
-	productRepo := new(utils.MockProductRepository)
-	usecase := usecases.CreateOrderUsecase{
+	orderRepo := new(utils2.MockOrderRepository)
+	productRepo := new(utils2.MockProductRepository)
+	usecase := CreateOrderUsecase{
 		OrderRepository:    orderRepo,
 		CustomerRepository: nil,
 		ProductRepository:  productRepo,
@@ -55,9 +54,9 @@ func TestCreateOrderUsecase_Execute_Success(t *testing.T) {
 
 func TestCreateOrderUsecase_Execute_ProductNotFound(t *testing.T) {
 	// Arrange
-	orderRepo := new(utils.MockOrderRepository)
-	productRepo := new(utils.MockProductRepository)
-	usecase := usecases.CreateOrderUsecase{
+	orderRepo := new(utils2.MockOrderRepository)
+	productRepo := new(utils2.MockProductRepository)
+	usecase := CreateOrderUsecase{
 		OrderRepository:    orderRepo,
 		CustomerRepository: nil,
 		ProductRepository:  productRepo,
@@ -83,9 +82,9 @@ func TestCreateOrderUsecase_Execute_ProductNotFound(t *testing.T) {
 
 func TestCreateOrderUsecase_Execute_OrderCreationError(t *testing.T) {
 	//Arrange
-	orderRepo := new(utils.MockOrderRepository)
-	productRepo := new(utils.MockProductRepository)
-	usecase := usecases.CreateOrderUsecase{
+	orderRepo := new(utils2.MockOrderRepository)
+	productRepo := new(utils2.MockProductRepository)
+	usecase := CreateOrderUsecase{
 		OrderRepository:    orderRepo,
 		CustomerRepository: nil,
 		ProductRepository:  productRepo,
