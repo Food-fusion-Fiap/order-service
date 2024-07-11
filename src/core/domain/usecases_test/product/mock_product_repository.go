@@ -25,3 +25,13 @@ func (m *MockProductRepository) Edit(product *entities.Product) (*entities.Produ
 	args := m.Called(product)
 	return args.Get(0).(*entities.Product), args.Error(1)
 }
+
+func (m *MockProductRepository) FindAll() ([]entities.Product, error) {
+	args := m.Called()
+	return args.Get(0).([]entities.Product), args.Error(1)
+}
+
+func (m *MockProductRepository) FindByCategoryId(categoryId uint) ([]entities.Product, error) {
+	args := m.Called(categoryId)
+	return args.Get(0).([]entities.Product), args.Error(1)
+}
