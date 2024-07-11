@@ -20,3 +20,8 @@ func (m *MockProductCategoryRepository) FindById(id uint) (*entities.ProductCate
 func (m *MockProductCategoryRepository) IsExistingProductCategory() bool {
 	return true // Simulating that the category exists
 }
+
+func (m *MockProductCategoryRepository) FindAll() ([]entities.ProductCategory, error) {
+	args := m.Called()
+	return args.Get(0).([]entities.ProductCategory), args.Error(1)
+}
