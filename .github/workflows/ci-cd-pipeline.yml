@@ -140,21 +140,10 @@ jobs:
 #          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
 #          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
 
-      # Replace with your logic to determine the next tag name
-      - name: Determine next tag
-        id: tagger
-        run: echo "::set-output name=next_tag::v1.0.0"  # Example logic to set the tag name
-
-      - name: Push new tag to GitHub
-        id: create_tag
+      - name: Generate semantic version tag
+        uses: hennejg/github-tag-action@v4.1.jh1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push tag
         run: |
-          latest_tag=$(git describe --tags --abbrev=0)
-          # Assuming your versioning scheme is numeric (e.g., vX.Y.Z)
-          version="${latest_tag//v/}"
-          IFS='.' read -r -a parts <<< "$version"
-          major="${parts[0]}"
-          minor="${parts[1]}"
-          patch="${parts[2]}"
-          new_version="v$major.$((minor + 1)).0"  # Increment minor version
-          git tag "$new_version"
-          git push origin "$new_version"
+          git push --follow-tags
