@@ -141,7 +141,12 @@ jobs:
 #          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
 
       - name: Push new tag to GitHub
-        working-directory: ${{ github.workspace }}
-        run: |
-          git tag ${{ steps.tagger.outputs.next_tag }}
-          git push origin ${{ steps.tagger.outputs.next_tag }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.tagger.outputs.next_tag }}',
+              sha: context.sha
+            })
