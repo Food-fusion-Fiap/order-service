@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: group-18-fastfood-backend
+  labels:
+    app: group-18-fastfood-backend
+spec:
+  selector:
+    matchLabels:
+      app: group-18-fastfood-backend
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: group-18-fastfood-backend
+      labels:
+        app: group-18-fastfood-backend
+    spec:
+      containers:
+      - name: group-18-fastfood-backend
+        image: placeholder_repository_name
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8080
+        livenessProbe:
+            httpGet:
+              path: /products/categories
+              port: 8080
+            periodSeconds: 60
+            failureThreshold: 3
+            initialDelaySeconds: 10
+        readinessProbe:
+            httpGet:
+              path: /products/categories
+              port: 8080
+            periodSeconds: 20
+            failureThreshold: 5
+            initialDelaySeconds: 3
+        resources:
+          requests:
+            cpu: 8m
+          limits:
+            cpu: 8m  
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: configmap-group-18-fastfood-backend
+                key: POSTGRES_DB
+          - name: POSTGRES_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: configmap-group-18-fastfood-backend
+                key: POSTGRES_HOST
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: secret-group-18-fastfood-backend
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secret-group-18-fastfood-backend
+                key: POSTGRES_PASSWORD
+          - name: MONGO_INITDB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: configmap-group-18-fastfood-backend
+                key: MONGO_INITDB_HOST
+          - name: MONGO_INITDB_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: configmap-group-18-fastfood-backend
+                key: MONGO_INITDB_DATABASE
+          - name: MONGO_INITDB_ROOT_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: secret-group-18-fastfood-backend
+                key: MONGO_INITDB_ROOT_USERNAME
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secret-group-18-fastfood-backend
+                key: MONGO_INITDB_ROOT_PASSWORD
