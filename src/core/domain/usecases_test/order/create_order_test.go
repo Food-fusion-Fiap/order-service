@@ -1,89 +1,114 @@
 package order
 
 import (
+	"errors"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/enums"
 	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
-	"math/rand"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
-	"github.com/Food-fusion-Fiap/order-service/src/adapters/gateways"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/dtos"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
 	"github.com/stretchr/testify/assert"
 )
 
-type mockCustomerRepository struct {
-	gateways.CustomerRepository
-	mockFindFirstById func(uint) (*entities.Customer, error)
-}
-
-func (m *mockCustomerRepository) FindFirstById(id uint) (*entities.Customer, error) {
-	return m.mockFindFirstById(id)
-}
-
-type mockProductRepository struct {
-	gateways.ProductRepository
-	mockFindByIds func([]uint) ([]entities.Product, error)
-}
-
-func (m *mockProductRepository) FindByIds(ids []uint) ([]entities.Product, error) {
-	return m.mockFindByIds(ids)
-}
-
-func TestCreateOrderUsecase_Execute(t *testing.T) {
-	mockOrderRepo := &utils.MockOrderRepository{}
-	mockCustomerRepo := &mockCustomerRepository{}
-	mockProductRepo := &mockProductRepository{}
-
+func TestCreateOrderUsecase_Execute_Success(t *testing.T) {
+	// Arrange
+	orderRepo := new(utils.MockOrderRepository)
+	productRepo := new(utils.MockProductRepository)
 	usecase := usecases.CreateOrderUsecase{
-		OrderRepository:    mockOrderRepo,
-		CustomerRepository: mockCustomerRepo,
-		ProductRepository:  mockProductRepo,
+		OrderRepository:    orderRepo,
+		CustomerRepository: nil,
+		ProductRepository:  productRepo,
 	}
 
-	t.Run("valid input and arbitrary customer", func(t *testing.T) {
-		mockOrderRepo.mockCreate = func(order *entities.Order) (*entities.Order, error) {
-			return &entities.Order{}, nil
-		}
+	inputDto := dtos.CreateOrderDto{
+		CustomerId: 1,
+		Products:   []dtos.ProductInsideOrder{{Id: 1, Quantity: 2, Observation: "Test observation"}},
+	}
+	expectedOrder := &entities.Order{
+		Status:        enums.Created,
+		PaymentStatus: enums.AwaitingPayment,
+		CustomerID:    1,
+		Products: []entities.ProductInsideOrder{
+			{Quantity: 2, Observation: "Test observation", Product: entities.Product{ID: 1}},
+		},
+	}
 
-		mockCustomerRepo.mockFindFirstById = func(id uint) (*entities.Customer, error) {
-			return &entities.Customer{ID: id}, nil
-		}
+	product := &entities.Product{ID: 1}
 
-		mockProductRepo.mockFindByIds = func(ids []uint) ([]entities.Product, error) {
-			return []entities.Product{{ID: 1}, {ID: 2}}, nil
-		}
+	productRepo.On("FindByIds", []uint{1}).Return([]entities.Product{*product}, nil).Twice()
+	orderRepo.On("Create", mock.AnythingOfType("*entities.Order")).Return(expectedOrder, nil)
 
-		inputDto := dtos.CreateOrderDto{
-			CustomerId: uint(rand.Intn(100)),
-			Products: []dtos.ProductInsideOrder{
-				{Id: 1, Quantity: 2, Observation: "test"},
-				{Id: 2, Quantity: 1, Observation: "test"},
-			},
-		}
+	// Act
+	result, err := usecase.Execute(inputDto)
 
-		_, err := usecase.Execute(inputDto)
-		assert.NoError(t, err)
-	})
+	// Assert
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, expectedOrder, result)
 
-	t.Run("invalid product", func(t *testing.T) {
-		mockCustomerRepo.mockFindFirstById = func(id uint) (*entities.Customer, error) {
-			return &entities.Customer{ID: id}, nil
-		}
+	productRepo.AssertExpectations(t)
+	orderRepo.AssertExpectations(t)
+}
 
-		mockProductRepo.mockFindByIds = func(ids []uint) ([]entities.Product, error) {
-			return []entities.Product{}, nil
-		}
+func TestCreateOrderUsecase_Execute_ProductNotFound(t *testing.T) {
+	// Arrange
+	orderRepo := new(utils.MockOrderRepository)
+	productRepo := new(utils.MockProductRepository)
+	usecase := usecases.CreateOrderUsecase{
+		OrderRepository:    orderRepo,
+		CustomerRepository: nil,
+		ProductRepository:  productRepo,
+	}
 
-		inputDto := dtos.CreateOrderDto{
-			CustomerId: 1,
-			Products: []dtos.ProductInsideOrder{
-				{Id: 1, Quantity: 2, Observation: "test"},
-				{Id: 2, Quantity: 1, Observation: "test"},
-			},
-		}
+	inputDto := dtos.CreateOrderDto{
+		CustomerId: 1,
+		Products:   []dtos.ProductInsideOrder{{Id: 1, Quantity: 2, Observation: "Test observation"}},
+	}
 
-		_, err := usecase.Execute(inputDto)
-		assert.EqualError(t, err, "algum dos produtos não foi encontrado")
-	})
+	productRepo.On("FindByIds", []uint{1}).Return([]entities.Product{}, errors.New("algum dos produtos não foi encontrado"))
+
+	// Act
+	result, err := usecase.Execute(inputDto)
+
+	// Assert
+	assert.NotNil(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "algum dos produtos não foi encontrado", err.Error())
+
+	productRepo.AssertExpectations(t)
+}
+
+func TestCreateOrderUsecase_Execute_OrderCreationError(t *testing.T) {
+	//Arrange
+	orderRepo := new(utils.MockOrderRepository)
+	productRepo := new(utils.MockProductRepository)
+	usecase := usecases.CreateOrderUsecase{
+		OrderRepository:    orderRepo,
+		CustomerRepository: nil,
+		ProductRepository:  productRepo,
+	}
+
+	inputDto := dtos.CreateOrderDto{
+		CustomerId: 1,
+		Products:   []dtos.ProductInsideOrder{{Id: 1, Quantity: 2, Observation: "Test observation"}},
+	}
+
+	product := &entities.Product{ID: 1}
+
+	productRepo.On("FindByIds", []uint{1}).Return([]entities.Product{*product}, nil)
+	orderRepo.On("Create", mock.AnythingOfType("*entities.Order")).Return(&entities.Order{}, errors.New("error creating order"))
+
+	//Act
+	result, err := usecase.Execute(inputDto)
+
+	//Assert
+	assert.NotNil(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "error creating order", err.Error())
+
+	productRepo.AssertExpectations(t)
+	orderRepo.AssertExpectations(t)
 }

@@ -14,7 +14,8 @@ type MockOrderRepository struct {
 }
 
 func (m *MockOrderRepository) Create(order *entities.Order) (*entities.Order, error) {
-	return m.mockCreate(order)
+	args := m.Called(order)
+	return args.Get(0).(*entities.Order), args.Error(1)
 }
 
 func (m *MockOrderRepository) FindById(orderId string) (*entities.Order, error) {

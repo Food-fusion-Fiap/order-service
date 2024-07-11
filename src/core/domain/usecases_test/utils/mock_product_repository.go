@@ -40,3 +40,8 @@ func (m *MockProductRepository) DeleteById(id uint) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
+
+func (m *MockProductRepository) FindByIds(ids []uint) ([]entities.Product, error) {
+	args := m.Called(ids)
+	return args.Get(0).([]entities.Product), args.Error(1)
+}
