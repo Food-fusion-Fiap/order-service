@@ -127,7 +127,7 @@ func Update(ctx *gin.Context) {
 func Delete(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Params.ByName("id"))
 
-	useCase := usecases.BuildDeleteProductUsecase(repositories2.ProductRepository{}, repositories2.OrderRepository{})
+	useCase := usecases.BuildDeleteProductUsecase(repositories2.ProductRepository{})
 
 	err := useCase.Execute(uint(id))
 
