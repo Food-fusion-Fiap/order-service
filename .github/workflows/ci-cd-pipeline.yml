@@ -64,11 +64,11 @@ jobs:
               # When you need the analysis to take place in a directory other than the one from which it was launched, default is .
               projectBaseDir: .
 
-#  build-and-deploy:
-#    name: Continuous Delivery Pipeline
-#    runs-on: ubuntu-latest
-#    if: github.event_name == 'push'
-#    steps:
+  build-and-deploy:
+    name: Continuous Delivery Pipeline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
 #      - name: Checkout code
 #        uses: actions/checkout@v2
 #
