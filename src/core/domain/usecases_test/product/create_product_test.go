@@ -11,17 +11,15 @@ import (
 )
 
 func TestCreateProductUsecase_Execute(t *testing.T) {
-	// Initialize mocks
+
 	mockProductRepo := new(MockProductRepository)
 	mockProductCategoryRepo := new(MockProductCategoryRepository)
 
 	emptyProductCategory := entities.ProductCategory{}
 	productCategory := entities.ProductCategory{ID: 1, Description: "desc"}
 
-	// Create instance of CreateProductUsecase
 	usecase := usecases.BuildCreateProductUsecase(mockProductRepo, mockProductCategoryRepo)
 
-	// Define test cases
 	tests := []struct {
 		name                    string
 		inputDto                productDtos.PersistProductDto
@@ -58,7 +56,7 @@ func TestCreateProductUsecase_Execute(t *testing.T) {
 				Name:        "Test Product",
 				Price:       10.99,
 				Description: "Test Description",
-				CategoryID:  2, // Assuming category ID 2 doesn't exist
+				CategoryID:  2,
 			},
 			expectedProduct: &entities.Product{
 				Name:        "Test Product",
@@ -88,25 +86,21 @@ func TestCreateProductUsecase_Execute(t *testing.T) {
 		},
 	}
 
-	// Iterate over test cases
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
 			mockProductCategoryRepo.On("FindById", tt.inputDto.CategoryID).
 				Return(tt.expectedProductCategory, tt.categoryRepoError).
-				Once() // Ensure this method is called once
+				Once()
 
-			// Mock behavior of ProductRepository based on the scenario
 			if !tt.categoryNotFound && tt.categoryRepoError == nil {
 				mockProductRepo.On("Create", mock.AnythingOfType("*entities.Product")).
 					Return(tt.expectedProduct, nil).
-					Once() // Ensure this method is called once
+					Once()
 			}
 
-			// Execute the use case method
 			product, err := usecase.Execute(tt.inputDto)
 
-			// Assertions
 			if tt.expectedError != nil {
 				assert.EqualError(t, err, tt.expectedError.Error())
 			} else {
@@ -114,7 +108,6 @@ func TestCreateProductUsecase_Execute(t *testing.T) {
 				assert.Equal(t, tt.expectedProduct, product)
 			}
 
-			// Verify expectations
 			mockProductRepo.AssertExpectations(t)
 			mockProductCategoryRepo.AssertExpectations(t)
 		})

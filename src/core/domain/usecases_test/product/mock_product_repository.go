@@ -15,3 +15,13 @@ func (m *MockProductRepository) Create(product *entities.Product) (*entities.Pro
 	args := m.Called(product)
 	return args.Get(0).(*entities.Product), args.Error(1)
 }
+
+func (m *MockProductRepository) FindById(id uint) (*entities.Product, error) {
+	args := m.Called(id)
+	return args.Get(0).(*entities.Product), args.Error(1)
+}
+
+func (m *MockProductRepository) Edit(product *entities.Product) (*entities.Product, error) {
+	args := m.Called(product)
+	return args.Get(0).(*entities.Product), args.Error(1)
+}
