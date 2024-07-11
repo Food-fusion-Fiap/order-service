@@ -53,7 +53,7 @@ jobs:
                 -Dsonar.tests=.
                 -Dsonar.test.inclusions=**/*_test.go
                 -Dsonar.sources=src/
-                -Dsonar.exclusions=src/infra/db/**,src/infra/web/routes/**,src/adapters/**,
+                -Dsonar.exclusions=src/infra/db/**,src/infra/web/routes/**,src/adapters/controllers/order/**,src/adapters/controllers/product/**,src/adapters/gateways/**,
                 -Dsonar.go.coverage.reportPaths=cov.out
                 # Comma-separated paths to directories containing main source files.
                 #-Dsonar.sources= # optional, default is project base directory
