@@ -142,7 +142,5 @@ jobs:
 
       - name: Push new tag to GitHub
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
           git tag ${{ steps.tagger.outputs.next_tag }}
           git push origin ${{ steps.tagger.outputs.next_tag }}
