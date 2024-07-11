@@ -5,6 +5,7 @@ import (
 	productDtos "github.com/Food-fusion-Fiap/order-service/src/core/domain/dtos/product"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
 	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/product"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -12,8 +13,8 @@ import (
 
 func TestCreateProductUsecase_Execute(t *testing.T) {
 
-	mockProductRepo := new(MockProductRepository)
-	mockProductCategoryRepo := new(MockProductCategoryRepository)
+	mockProductRepo := new(utils.MockProductRepository)
+	mockProductCategoryRepo := new(utils.MockProductCategoryRepository)
 
 	emptyProductCategory := entities.ProductCategory{}
 	productCategory := entities.ProductCategory{ID: 1, Description: "desc"}

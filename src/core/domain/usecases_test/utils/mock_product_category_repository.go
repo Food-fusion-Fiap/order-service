@@ -1,4 +1,4 @@
-package product
+package utils
 
 import (
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"

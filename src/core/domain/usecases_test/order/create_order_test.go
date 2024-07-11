@@ -2,6 +2,7 @@ package order
 
 import (
 	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/order"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
 	"math/rand"
 	"testing"
 
@@ -30,7 +31,7 @@ func (m *mockProductRepository) FindByIds(ids []uint) ([]entities.Product, error
 }
 
 func TestCreateOrderUsecase_Execute(t *testing.T) {
-	mockOrderRepo := &MockOrderRepository{}
+	mockOrderRepo := &utils.MockOrderRepository{}
 	mockCustomerRepo := &mockCustomerRepository{}
 	mockProductRepo := &mockProductRepository{}
 

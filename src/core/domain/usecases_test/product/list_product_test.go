@@ -4,13 +4,14 @@ import (
 	"errors"
 	"github.com/Food-fusion-Fiap/order-service/src/core/domain/entities"
 	usecases "github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases/product"
+	"github.com/Food-fusion-Fiap/order-service/src/core/domain/usecases_test/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestListProductUsecase_Execute_NoCategoryId(t *testing.T) {
 	// Arrange
-	repo := new(MockProductRepository)
+	repo := new(utils.MockProductRepository)
 	usecase := usecases.BuildListProductUsecase(repo)
 
 	expectedProducts := []entities.Product{
@@ -32,7 +33,7 @@ func TestListProductUsecase_Execute_NoCategoryId(t *testing.T) {
 
 func TestListProductUsecase_Execute_WithCategoryId(t *testing.T) {
 	// Arrange
-	repo := new(MockProductRepository)
+	repo := new(utils.MockProductRepository)
 	usecase := usecases.BuildListProductUsecase(repo)
 
 	expectedProducts := []entities.Product{
@@ -53,7 +54,7 @@ func TestListProductUsecase_Execute_WithCategoryId(t *testing.T) {
 
 func TestListProductUsecase_Execute_FindAllError(t *testing.T) {
 	// Arrange
-	repo := new(MockProductRepository)
+	repo := new(utils.MockProductRepository)
 	usecase := usecases.BuildListProductUsecase(repo)
 
 	repo.On("FindAll").Return([]entities.Product{}, errors.New("error finding all products"))
@@ -71,7 +72,7 @@ func TestListProductUsecase_Execute_FindAllError(t *testing.T) {
 
 func TestListProductUsecase_Execute_FindByCategoryIdError(t *testing.T) {
 	// Arrange
-	repo := new(MockProductRepository)
+	repo := new(utils.MockProductRepository)
 	usecase := usecases.BuildListProductUsecase(repo)
 
 	repo.On("FindByCategoryId", uint(1)).Return([]entities.Product{}, errors.New("error finding products by category ID"))

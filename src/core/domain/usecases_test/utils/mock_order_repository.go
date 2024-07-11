@@ -1,4 +1,4 @@
-package order
+package utils
 
 import (
 	"github.com/Food-fusion-Fiap/order-service/src/adapters/gateways"
