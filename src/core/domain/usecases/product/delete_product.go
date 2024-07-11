@@ -5,12 +5,11 @@ import (
 )
 
 type DeleteProductUsecase struct {
-	repository      gateways2.ProductRepository
-	orderRepository gateways2.OrderRepository
+	repository gateways2.ProductRepository
 }
 
-func BuildDeleteProductUsecase(repository gateways2.ProductRepository, orderRepository gateways2.OrderRepository) *DeleteProductUsecase {
-	return &DeleteProductUsecase{repository: repository, orderRepository: orderRepository}
+func BuildDeleteProductUsecase(repository gateways2.ProductRepository) *DeleteProductUsecase {
+	return &DeleteProductUsecase{repository: repository}
 }
 
 func (p *DeleteProductUsecase) Execute(id uint) error {
