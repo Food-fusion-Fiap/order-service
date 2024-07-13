@@ -133,7 +133,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ steps.tagger.outputs.next_tag }}
           K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
           K8S_DEPLOYMENT_CONTAINER_NAME: ${{ secrets.K8S_DEPLOYMENT_CONTAINER_NAME }}
         run: |
