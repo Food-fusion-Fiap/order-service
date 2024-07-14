@@ -89,13 +89,10 @@ jobs:
       - name: Calculate next tag
         id: tagger
         run: |
-          # Get the latest tag, fallback to 0.1.0 if none exists
-          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1 || echo "0.1.0")
-
-          # Increment the tag version
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) || echo "0.1.0")
           IFS='.' read -r -a VERSION_PARTS <<< "$LATEST_TAG"
           if [ ${#VERSION_PARTS[@]} -ne 3 ]; then
-            # If the latest tag is not in x.y.z format, reset to 0.1.0
             TAG="0.1.0"
           else
             PATCH=${VERSION_PARTS[2]}
