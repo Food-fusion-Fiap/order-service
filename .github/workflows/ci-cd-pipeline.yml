@@ -89,10 +89,18 @@ jobs:
       - name: Calculate next tag
         id: tagger
         run: |
-          TAG="0.1.0"  # Initialize with the starting version
-          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
-          if [ ! -z "$LATEST_TAG" ]; then
-            TAG=$(echo $LATEST_TAG | awk -F. '{$NF+=1; OFS="."; print $0}')
+          # Get the latest tag, fallback to 0.1.0 if none exists
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1 || echo "0.1.0")
+
+          # Increment the tag version
+          IFS='.' read -r -a VERSION_PARTS <<< "$LATEST_TAG"
+          if [ ${#VERSION_PARTS[@]} -ne 3 ]; then
+            # If the latest tag is not in x.y.z format, reset to 0.1.0
+            TAG="0.1.0"
+          else
+            PATCH=${VERSION_PARTS[2]}
+            PATCH=$((PATCH + 1))
+            TAG="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$PATCH"
           fi
           echo "Next tag: $TAG"
           echo "::set-output name=next_tag::$TAG"
