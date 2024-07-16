@@ -13,6 +13,7 @@ RUN go build -o /go/bin/app .
 FROM golang:1.22.1-alpine
 
 COPY --from=builder /go/bin/app /go/bin/app
+COPY --from=builder /app/infra/cert/global-bundle.pem /infra/cert/global-bundle.pem
 
 EXPOSE 8080
 
