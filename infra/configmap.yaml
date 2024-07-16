@@ -4,6 +4,6 @@ metadata:
   name: configmap-group-18-fastfood-backend
 data:
   POSTGRES_DB: "root"
-  POSTGRES_HOST: "postgres"
-  MONGO_INITDB_DATABASE: "food-fusion-order"
-  MONGO_INITDB_HOST: "mongodb-food-fusion-service"
+  POSTGRES_HOST: "root.cfvwvwxkdk4g.us-east-1.rds.amazonaws.com"
+  MONGO_INITDB_DATABASE: "root"
+  MONGO_INITDB_HOST: "mongodb-cluster.cluster-cdyakyg6kjsa.us-east-1.docdb.amazonaws.com"
