@@ -6,4 +6,4 @@ data:
   POSTGRES_DB: "root"
   POSTGRES_HOST: "root.cfvwvwxkdk4g.us-east-1.rds.amazonaws.com"
   MONGO_INITDB_DATABASE: "root"
-  MONGO_INITDB_HOST: "order-service.szgwtml.mongodb.net"
+  MONGO_INITDB_HOST: "mongodb-cluster.cluster-cdyakyg6kjsa.us-east-1.docdb.amazonaws.com"
