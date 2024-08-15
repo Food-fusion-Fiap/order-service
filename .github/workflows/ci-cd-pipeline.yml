@@ -12,19 +12,24 @@ on:
 permissions:
   contents: write
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
 jobs:
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.22.2
+          go-version: ^1.22.1
 
       - name: Install dependencies
         run: go mod download
@@ -32,45 +37,56 @@ jobs:
       - name: Build
         run: go build -o ./app .
 
-      - name: Run unit Tests
+      - name: Format code with gofumpt
+        run: go install mvdan.cc/gofumpt@latest && gofumpt -w .
+
+      - name: Install golangci-lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
+
+      - name: Run golangci-lint
         run: |
-          go test -coverprofile=./cov.out ./...
+          OUTPUT=$(golangci-lint run ./... 2>&1) || true
+          if [[ -n "$OUTPUT" ]]; then
+            echo "golangci-lint found issues:"
+            echo "$OUTPUT"
+          fi
 
-      - name: Analyze with SonarCloud
+      - name: Install go-staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
-        # You can pin the exact commit or the version.
-        # uses: SonarSource/sonarcloud-github-action@v2.2.0
-        uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # Generate a token on Sonarcloud.io, add it to the secrets of this repo with the name SONAR_TOKEN (Settings > Secrets > Actions > add new repository secret)
-        with:
-          # Additional arguments for the SonarScanner CLI
-          args:
-            # Unique keys of your project and organization. You can find them in SonarCloud > Information (bottom-left menu)
-            # mandatory
-            -Dsonar.projectKey=Food-fusion-Fiap_order-service
-            -Dsonar.organization=food-fusion-fiap
-            -Dsonar.tests=.
-            -Dsonar.test.inclusions=**/*_test.go
-            -Dsonar.sources=src/
-            -Dsonar.exclusions=src/infra/db/**,src/infra/web/routes/**,src/infra/web/http-clients/**,src/adapters/controllers/order/**,src/adapters/controllers/product/**,src/adapters/gateways/**,src/core/domain/usecases/utils/**
-            -Dsonar.go.coverage.reportPaths=cov.out
-            # Comma-separated paths to directories containing main source files.
-            #-Dsonar.sources= # optional, default is project base directory
-            # Comma-separated paths to directories containing test source files.
-            #-Dsonar.tests= # optional. For more info about Code Coverage, please refer to https://docs.sonarcloud.io/enriching/test-coverage/overview/
-          # Adds more detail to both client and server-side analysis logs, activating DEBUG mode for the scanner, and adding client-side environment variables and system properties to the server-side log of analysis report processing.
-          #-Dsonar.verbose= # optional, default is false
-          # When you need the analysis to take place in a directory other than the one from which it was launched, default is .
-          projectBaseDir: .
+      - name: Run go-staticcheck
+        run: |
+          OUTPUT=$(staticcheck ./... 2>&1) || true
+          if [[ -n "$OUTPUT" ]]; then
+            echo "golangci-lint found issues:"
+            echo "$OUTPUT"
+          fi
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/cmd/gosec@latest
+
+      - name: Run gosec
+        run: |
+          OUTPUT=$(gosec -exclude=G104 ./... 2>&1) || true
+          if [[ -n "$OUTPUT" ]]; then
+            echo "golangci-lint found issues:"
+            echo "$OUTPUT"
+          fi
+
+      - name: Test
+        run: go test ./...
 
   build-and-deploy:
-    name: Continuous Delivery Pipeline
+    name: CD Pipeline - Continuous Delivery Pipeline
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push'
     steps:
+      - name: Set short git commit SHA
+        id: commit
+        uses: prompt/actions-commit-hash@v2
+
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -80,33 +96,17 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Calculate next tag
-        id: tagger
-        run: |
-          git fetch --tags
-          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) || echo "0.1.0")
-          IFS='.' read -r -a VERSION_PARTS <<< "$LATEST_TAG"
-          if [ ${#VERSION_PARTS[@]} -ne 3 ]; then
-            TAG="0.1.0"
-          else
-            PATCH=${VERSION_PARTS[2]}
-            PATCH=$((PATCH + 1))
-            TAG="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$PATCH"
-          fi
-          echo "Next tag: $TAG"
-          echo "::set-output name=next_tag::$TAG"
 
       - name: Build, tag, and push Docker image to Amazon ECR
         env:
-          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ steps.tagger.outputs.next_tag }}
+          ECR_REPOSITORY: ${{ vars.SERVICE_NAME }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.commit.outputs.short }}
         run: |
           IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker build -t $IMAGE_URI .
@@ -114,9 +114,28 @@ jobs:
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
       - name: Update Kubernetes configuration
+        env:
+          SERVICE_NAME: ${{ vars.SERVICE_NAME }}
         run: |
+          DB_NAME=$(aws ssm get-parameter --name "/$SERVICE_NAME/db_name" --with-decryption --output json | jq '.Parameter | .Value')
+          DB_HOST=$(aws ssm get-parameter --name "/$SERVICE_NAME/db_host" --with-decryption --output json | jq '.Parameter | .Value')
+          DB_USERNAME=$(aws ssm get-parameter --name "/$SERVICE_NAME/db_username" --with-decryption --output json | jq '.Parameter | .Value')
+          DB_PASSWORD=$(aws ssm get-parameter --name "/$SERVICE_NAME/db_password" --with-decryption --output json | jq '.Parameter | .Value')
+
+          DOCUMENT_DB_HOST=$(aws ssm get-parameter --name "/$SERVICE_NAME/documentdb_host" --with-decryption --output json | jq '.Parameter | .Value')
+          DOCUMENT_DB_USERNAME=$(aws ssm get-parameter --name "/$SERVICE_NAME/documentdb_username" --with-decryption --output json | jq '.Parameter | .Value')
+          DOCUMENT_DB_PASSWORD=$(aws ssm get-parameter --name "/$SERVICE_NAME/documentdb_password" --with-decryption --output json | jq '.Parameter | .Value')
+        
           sed -i 's|placeholder_repository_name|'"$IMAGE_URI"'|' ./infra/golang-app-deployment.yaml
-          cat ./infra/golang-app-deployment.yaml
+          sed -i 's|aws_ssm_db_name|'"$DB_NAME"'|' ./infra/configmap.yaml
+          sed -i 's|aws_ssm_db_host|'"$DB_HOST"'|' ./infra/configmap.yaml
+          sed -i 's|aws_ssm_db_username|'"$DB_USERNAME"'|' ./infra/secrets.yaml
+          sed -i 's|aws_ssm_db_password|'"$DB_PASSWORD"'|' ./infra/secrets.yaml
+
+          sed -i 's|aws_ssm_documentdb_host|'"$DOCUMENT_DB_HOST"'|' ./infra/configmap.yaml
+          sed -i 's|aws_ssm_documentdb_username|'"$DOCUMENT_DB_USERNAME"'|' ./infra/secrets.yaml
+          sed -i 's|aws_ssm_documentdb_password|'"$DOCUMENT_DB_PASSWORD"'|' ./infra/secrets.yaml
+
 
       - name: Install kubectl
         run: |
@@ -125,28 +144,16 @@ jobs:
           sudo mv kubectl /usr/local/bin/
 
       - name: Update kube config
-        run: aws eks update-kubeconfig --name ${{ secrets.AWS_EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+        env:
+          AWS_EKS_CLUSTER_NAME: ${{ vars.AWS_EKS_CLUSTER_NAME }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: aws eks update-kubeconfig --name $AWS_EKS_CLUSTER_NAME --region $AWS_REGION
 
       - name: Deploy to Kubernetes
         env:
-          K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
+          kubectl config get-contexts
           kubectl apply -f ./infra --validate=false
-          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
-
-      - name: Deploy to Kubernetes
-        env:
-          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ steps.tagger.outputs.next_tag }}
-          K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
-          K8S_DEPLOYMENT_CONTAINER_NAME: ${{ secrets.K8S_DEPLOYMENT_CONTAINER_NAME }}
-        run: |
-          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
-          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
-
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          kubectl rollout status deployment/order-service

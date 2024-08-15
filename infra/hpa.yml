@@ -1,14 +1,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: group-18-fastfood-backend-hpa
+  name: order-service-hpa
   labels:
-    app: group-18-fastfood-backend-hpa
+    app: order-service-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: group-18-fastfood-backend
+    name: order-service
   minReplicas: 3
   maxReplicas: 5
   metrics:

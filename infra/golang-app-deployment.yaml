@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: group-18-fastfood-backend
+  name: order-service
   labels:
-    app: group-18-fastfood-backend
+    app: order-service
 spec:
   selector:
     matchLabels:
-      app: group-18-fastfood-backend
+      app: order-service
   replicas: 3
   strategy:
     type: RollingUpdate
   template:
     metadata:
-      name: group-18-fastfood-backend
+      name: order-service
       labels:
-        app: group-18-fastfood-backend
+        app: order-service
     spec:
       containers:
-      - name: group-18-fastfood-backend
+      - name: order-service
         image: placeholder_repository_name
         imagePullPolicy: IfNotPresent
         ports:
@@ -46,40 +46,40 @@ spec:
           - name: POSTGRES_DB
             valueFrom:
               configMapKeyRef:
-                name: configmap-group-18-fastfood-backend
+                name: configmap-order-service
                 key: POSTGRES_DB
           - name: POSTGRES_HOST
             valueFrom:
               configMapKeyRef:
-                name: configmap-group-18-fastfood-backend
+                name: configmap-order-service
                 key: POSTGRES_HOST
           - name: POSTGRES_USER
             valueFrom:
               secretKeyRef:
-                name: secret-group-18-fastfood-backend
+                name: secret-order-service
                 key: POSTGRES_USER
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: secret-group-18-fastfood-backend
+                name: secret-order-service
                 key: POSTGRES_PASSWORD
           - name: MONGO_INITDB_HOST
             valueFrom:
               configMapKeyRef:
-                name: configmap-group-18-fastfood-backend
+                name: configmap-order-service
                 key: MONGO_INITDB_HOST
           - name: MONGO_INITDB_DATABASE
             valueFrom:
               configMapKeyRef:
-                name: configmap-group-18-fastfood-backend
+                name: configmap-order-service
                 key: MONGO_INITDB_DATABASE
           - name: MONGO_INITDB_ROOT_USERNAME
             valueFrom:
               secretKeyRef:
-                name: secret-group-18-fastfood-backend
+                name: secret-order-service
                 key: MONGO_INITDB_ROOT_USERNAME
           - name: MONGO_INITDB_ROOT_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: secret-group-18-fastfood-backend
+                name: secret-order-service
                 key: MONGO_INITDB_ROOT_PASSWORD

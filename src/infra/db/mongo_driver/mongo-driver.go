@@ -2,14 +2,11 @@ package mongo_driver
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"github.com/Food-fusion-Fiap/order-service/src/infra/db/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -25,29 +22,12 @@ func ConnectDB() {
 	locale, err := time.LoadLocation("America/Sao_Paulo")
 	LocaleApp = locale
 
-	// Load the AWS DocumentDB root CA
-	caCert, err := ioutil.ReadFile("/infra/cert/global-bundle.pem")
-	if err != nil {
-		log.Fatalf("Failed to read root certificate: %v", err)
-	}
-
-	// Create a new TLS config using the root CA
-	roots := x509.NewCertPool()
-	if ok := roots.AppendCertsFromPEM(caCert); !ok {
-		log.Fatalf("Failed to append CA certificate")
-	}
-
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: false,
-		RootCAs:            roots,
-	}
-
-	uri := fmt.Sprintf("mongodb://%s:%s@%s:27017",
+	uri := fmt.Sprintf("mongodb://%s:%s@%s:27017/?tls=false",
 		os.Getenv("MONGO_INITDB_ROOT_USERNAME"), os.Getenv("MONGO_INITDB_ROOT_PASSWORD"), os.Getenv("MONGO_INITDB_HOST"))
 
 	fmt.Println(uri)
 
-	clientOptions := options.Client().ApplyURI(uri).SetTLSConfig(tlsConfig)
+	clientOptions := options.Client().ApplyURI(uri)
 
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
@@ -58,7 +38,7 @@ func ConnectDB() {
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
-		log.Panic("Erro ao conectar com banco de dados MongoDB:", err)
+		log.Panic("Erro ao pingar o MongoDB:", err)
 	}
 
 	fmt.Println("Conectado ao MongoDB!")

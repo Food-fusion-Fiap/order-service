@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:30201",
+      "url": "http://localhost:30202",
       "description": "Desenvolvimento com Kubernetes"
     }
   ],
