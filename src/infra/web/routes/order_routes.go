@@ -11,5 +11,6 @@ func SetupOrderRoutes(router *gin.Engine) {
 		orderRoutes.POST("", orderController.CreateOrder)
 		orderRoutes.GET("", orderController.ListOngoingOrders)
 		orderRoutes.PATCH("/:id", orderController.ChangeOrderStatus)
+		orderRoutes.GET("/:id", orderController.GetOrder)
 	}
 }
