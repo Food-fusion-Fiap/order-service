@@ -23,5 +23,6 @@ go.work
 
 # project setup
 postgres-data
+mongodb-data
 
 .idea/

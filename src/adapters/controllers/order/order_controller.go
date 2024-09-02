@@ -114,3 +114,30 @@ func ListOngoingOrders(c *gin.Context) {
 
 	c.JSON(http.StatusOK, orders)
 }
+
+func GetOrder(c *gin.Context) {
+	id := c.Params.ByName("id")
+
+	orderRepository := &repositories.OrderRepository{}
+
+	usecase := order.GetOrderUseCase{
+		OrderRepository: orderRepository,
+	}
+
+	orders, err := usecase.Execute(id)
+
+	if err != nil {
+		fmt.Println("there was an error to process GetOrderUseCase", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if orders == nil {
+		c.JSON(http.StatusOK, []string{})
+		return
+	}
+
+	c.JSON(http.StatusOK, orders)
+}

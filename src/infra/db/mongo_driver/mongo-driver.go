@@ -22,6 +22,9 @@ func ConnectDB() {
 	locale, err := time.LoadLocation("America/Sao_Paulo")
 	LocaleApp = locale
 
+	//Local connection
+	//uri := fmt.Sprintf("mongodb://root:root@localhost:27017/?tls=false")
+
 	uri := fmt.Sprintf("mongodb://%s:%s@%s:27017/?tls=false",
 		os.Getenv("MONGO_INITDB_ROOT_USERNAME"), os.Getenv("MONGO_INITDB_ROOT_PASSWORD"), os.Getenv("MONGO_INITDB_HOST"))
 
