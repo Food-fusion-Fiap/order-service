@@ -52,7 +52,6 @@ func CreateOrder(c *gin.Context) {
 
 func ChangeOrderStatus(c *gin.Context) {
 	var inputDto dtos.ChangeOrderStatusDto
-	id := c.Params.ByName("id")
 
 	if err := c.ShouldBindJSON(&inputDto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -74,7 +73,7 @@ func ChangeOrderStatus(c *gin.Context) {
 		OrderRepository: orderRepository,
 	}
 
-	orderResult, err := usecase.Execute(id, inputDto.ChangeToStatus)
+	orderResult, err := usecase.Execute(inputDto.OrderId, inputDto.ChangeToStatus)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
