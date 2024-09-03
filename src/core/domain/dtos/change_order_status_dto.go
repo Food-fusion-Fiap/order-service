@@ -1,6 +1,6 @@
 package dtos
 
 type ChangeOrderStatusDto struct {
-	OrderId        uint   `json:"orderId"`
+	OrderId        string `json:"orderId"`
 	ChangeToStatus string `json:"changeToStatus"`
 }
