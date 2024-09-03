@@ -23,9 +23,9 @@ func ConnectDB() {
 	LocaleApp = locale
 
 	//Local connection
-	//uri := fmt.Sprintf("mongodb://root:root@localhost:27017/?tls=false")
+	//uri := fmt.Sprintf("mongodb://root:root@localhost:27017/?tls=false&retryWrites=false")
 
-	uri := fmt.Sprintf("mongodb://%s:%s@%s:27017/?tls=false",
+	uri := fmt.Sprintf("mongodb://%s:%s@%s:27017/?tls=false&retryWrites=false",
 		os.Getenv("MONGO_INITDB_ROOT_USERNAME"), os.Getenv("MONGO_INITDB_ROOT_PASSWORD"), os.Getenv("MONGO_INITDB_HOST"))
 
 	fmt.Println(uri)
@@ -47,6 +47,8 @@ func ConnectDB() {
 	fmt.Println("Conectado ao MongoDB!")
 
 	db := client.Database(os.Getenv("MONGO_INITDB_DATABASE"))
+	//Local connection
+	//db := client.Database("root")
 	ProductCategoriesCollection = db.Collection("product_categories")
 	OrdersCollection = db.Collection("orders")
 

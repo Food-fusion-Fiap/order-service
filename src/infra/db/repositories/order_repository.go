@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"time"
 )
 
@@ -153,6 +154,7 @@ func (r OrderRepository) Create(order *entities.Order) (*entities.Order, error) 
 
 	result, err := mongo_driver.OrdersCollection.InsertOne(context.TODO(), model)
 	if err != nil {
+		log.Println(err)
 		return nil, errors.New("ocorreu um erro desconhecido ao criar o pedido")
 	}
 
