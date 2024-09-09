@@ -8,11 +8,22 @@ import (
 	"gopkg.in/validator.v2"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 )
 
 func List(ctx *gin.Context) {
 	value, _ := ctx.GetQuery("categoryId")
+	var re = regexp.MustCompile(`^[0-9]+$`)
+
+	if !re.MatchString(value) {
+		log.Printf("invalid categoryId param: %s", value)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid param",
+		})
+		return
+	}
+
 	categoryId, _ := strconv.Atoi(value)
 
 	productRepository := repositories2.ProductRepository{}
